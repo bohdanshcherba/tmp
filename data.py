@@ -65,7 +65,7 @@ class QuestionListModel(QAbstractListModel):
     def rowCount(self):
         return len(self.form_list)
     
-    def data(self, index, role)
+    def data(self, index, role):
         if role == Qt.DisplayRole:
             form = self.form_list(index.row())
             return form.question
