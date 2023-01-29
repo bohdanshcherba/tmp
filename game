@@ -22,10 +22,57 @@ class Sprite(sprite.Sprite):
     def reset(self):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
+class Player(Sprite):
+    def move(self):
+        keys = key.get_pressed()
+        if keys[K_LEFT] and self.rect.x > 5:
+            self.rect.x -= self.speed
+        if keys[K_RIGHT] and self.rect.x < 655:
+            self.rect.x += self.speed
+        if keys[K_UP] and self.rect.y > 5:
+            self.rect.y -= self.speed
+        if keys[K_DOWN] and self.rect.y <  500-80:
+            self.rect.y += self.speed
+
+class Enemy(Sprite):
+    direction = 'left'
+
+    def move(self):
+        if self.rect.x < 470:
+            self.direction = 'right'
+        if self.rect.x > 650:
+            self.direction = 'left'
+
+        if self.direction == 'left':
+            self.rect.x -= self.speed
+        else:
+            self.rect.x += self.speed
+
+
+class Wall(sprite.Sprite):
+    def __init__(self, rgb, x,y,w,h):
+        super().__init__()
+        self.rgb = rgb
+        self.width = w
+        self.height = h
+        self.wall = Surface((w,h))
+        self.wall.fill(rgb)
+
+        self.rect = self.wall.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def draw(self):
+        window.blit(self.wall, (self.rect.x, self.rect.y))
+
+
 
 player = Player('hero.png', 5, 80, 4)
-monster = Enemy('cyborg.png', 80, 280, 2)
+monster = Enemy('cyborg.png', 600, 280, 2)
 final = Sprite('treasure.png', 10,10, 0)
+
+w1 = Wall((2,4,55), 50,50, 500, 10)
+w2 = Wall((2,4,55), 50,50, 10, 500)
 
 game = True
 clock = time.Clock()
@@ -42,13 +89,18 @@ while game:
         if e.type == QUIT:
             game = False
     window.blit(background,(0, 0))
-    
     player.reset()
     monster.move()
     player.move()
 
-    monster.reset()
+    if sprite.collide_rect(player, monster):
+        player.rect.x = 20
+        player.rect.y = 20
 
+
+    monster.reset()
+    w1.draw()
+    w2.draw()
 
     display.update()
     clock.tick(FPS)
