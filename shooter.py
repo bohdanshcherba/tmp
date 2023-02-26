@@ -1,6 +1,6 @@
 #Створи власний Шутер!
 from pygame import *
-
+from random import randint
 # фонова музика
 mixer.init()
 mixer.music.load('space.ogg')
@@ -19,7 +19,8 @@ class GameSprite(sprite.Sprite):
         super().__init__()
         # кожен спрайт повинен зберігати властивість image - зображення
       
-        self.speed = player_speed  self.image = transform.scale(image.load(player_image), (size_x, size_y))
+        self.speed = player_speed 
+        self.image = transform.scale(image.load(player_image), (size_x, size_y))
         # кожен спрайт повинен зберігати властивість rect - прямокутник, в який він вписаний
         self.rect = self.image.get_rect()
         self.rect.x = player_x
@@ -31,14 +32,46 @@ class GameSprite(sprite.Sprite):
 
 class Player(GameSprite):
     def move(self):
+        keys = key.get_pressed()
+        if keys[K_LEFT]== True:
+            self.rect.x = self.rect.x-self.speed
+        if keys[K_RIGHT]:
+            self.rect.x = self.rect.x+self.speed
         #рух вправо вліво
+
+    def fire(self):
+        bullet = Bullet('bullet.png',self.rect.centerx, self.rect.top, 15,20,3)
+        bullets.add(bullet)
+
+lost = 0
 
 class Enemy(GameSprite):
-    def move(self):
-        #рух вправо вліво
+    def update(self):
+        self.rect.y = self.rect.y + self.speed
+        global lost
+
+        if self.rect.y >= 450:
+            lost = lost+1
+            self.rect.y = 0
+            self.rect.x = randint(50,650)
+            self.speed = randint(1,2)
+
+
+class Bullet(GameSprite):
+    def update(self):
+        self.rect.y -= self.speed
+
+        if self.rect.y <= 0:
+            self.kill()
 
 monsters = sprite.Group()
-monsters.add()
+bullets = sprite.Group()
+
+
+for i in range(1,6):
+    monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
+    monsters.add(monster)
+
 
 win_width = 700
 win_height = 500
@@ -52,12 +85,32 @@ run = True  # прапорець скидається кнопкою закри�
 clock = time.Clock()
 FPS = 60
 
+hero = Player(img_hero,350,450,50,50,5)
+font.init()
+font = font.Font(None,21)
+
 while run:
     # подія натискання на кнопку Закрити
     for e in event.get():
         if e.type == QUIT:
             run = False
+        
+        elif e.type == KEYDOWN:
+            if e.key == K_SPACE:
+                hero.fire()
 
     window.blit(background, (0, 0))
+
+    hero.reset()
+    hero.move()
+
+    bullets.draw(window)
+    bullets.update()
+
+    monsters.draw(window)
+    monsters.update()
+
+    window.blit(font.render("Пропущено: "+str(lost), True, (255,255,255)),(20,20))
+  
     display.update()
     clock.tick(FPS)
