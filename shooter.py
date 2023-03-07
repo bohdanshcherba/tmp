@@ -51,7 +51,7 @@ class Enemy(GameSprite):
         global lost
 
         if self.rect.y >= 450:
-            lost = lost+1
+            lost = lost + 1
             self.rect.y = 0
             self.rect.x = randint(50,650)
             self.speed = randint(1,2)
@@ -86,8 +86,12 @@ clock = time.Clock()
 FPS = 60
 
 hero = Player(img_hero,350,450,50,50,5)
+
+#шрифт
 font.init()
-font = font.Font(None,21)
+font = font.Font(None,24)
+
+score = 0
 
 while run:
     # подія натискання на кнопку Закрити
@@ -110,7 +114,19 @@ while run:
     monsters.draw(window)
     monsters.update()
 
-    window.blit(font.render("Пропущено: "+str(lost), True, (255,255,255)),(20,20))
+    text = font.render("Пропущено: " + str(lost), True, (255,255,255))
+
+    window.blit(text,(20,20))
   
+    collides = sprite.groupcollide(monsters, bullets, True, True)
+
+    for c in collides:
+        score = score + 1 
+        monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
+        monsters.add(monster)
+
+    if sprite.spritecollide(hero, monsters, False) or lost >= 100:
+        run = False    
+
     display.update()
     clock.tick(FPS)
