@@ -1,6 +1,7 @@
 #Створи власний Шутер!
 from pygame import *
 from random import randint
+import time as timer
 # фонова музика
 mixer.init()
 mixer.music.load('space.ogg')
@@ -10,6 +11,7 @@ fire_sound = mixer.Sound('fire.ogg')
 img_back = "galaxy.jpg"  # фон гри
 img_hero = "rocket.png"  # герой
 img_enemy = "ufo.png"  # ворог
+
 
 
 class GameSprite(sprite.Sprite):
@@ -66,11 +68,16 @@ class Bullet(GameSprite):
 
 monsters = sprite.Group()
 bullets = sprite.Group()
+asteroids = sprite.Group()
 
 
 for i in range(1,6):
     monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
     monsters.add(monster)
+
+for i in range(1,6):
+    esteroid = Enemy("asteroid.png", randint(50,650), 0, 50,50, randint(1,5))
+    asteroids.add(esteroid)
 
 
 win_width = 700
@@ -82,6 +89,8 @@ window = display.set_mode((win_width, win_height))
 background = transform.scale(image.load(img_back), (win_width, win_height))
 
 run = True  # прапорець скидається кнопкою закриття вікна
+finish = False
+
 clock = time.Clock()
 FPS = 60
 
@@ -89,9 +98,10 @@ hero = Player(img_hero,350,450,50,50,5)
 
 #шрифт
 font.init()
-font = font.Font(None,24)
+font = font.SysFont('Arial',24)
 
 score = 0
+lifes = 3
 
 while run:
     # подія натискання на кнопку Закрити
@@ -102,31 +112,75 @@ while run:
         elif e.type == KEYDOWN:
             if e.key == K_SPACE:
                 hero.fire()
+    if not finish:
+        window.blit(background, (0, 0))
 
-    window.blit(background, (0, 0))
+        hero.reset()
+        hero.move()
 
-    hero.reset()
-    hero.move()
+        bullets.draw(window)
+        bullets.update()
 
-    bullets.draw(window)
-    bullets.update()
+        monsters.draw(window)
+        monsters.update()
 
-    monsters.draw(window)
-    monsters.update()
+        asteroids.draw(window)
+        asteroids.update()
 
-    text = font.render("Пропущено: " + str(lost), True, (255,255,255))
 
-    window.blit(text,(20,20))
-  
-    collides = sprite.groupcollide(monsters, bullets, True, True)
+        text = font.render("Пропущено: " + str(lost), True, (255,255,255))
 
-    for c in collides:
-        score = score + 1 
-        monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
-        monsters.add(monster)
+        window.blit(text,(20,20))
+    
+        collides = sprite.groupcollide(monsters, bullets, True, True)
 
-    if sprite.spritecollide(hero, monsters, False) or lost >= 100:
-        run = False    
+        for c in collides:
+            score = score + 1 
+            monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
+            monsters.add(monster)
+
+        if sprite.spritecollide(hero, monsters, False) or sprite.spritecollide(hero, asteroids, False):
+            
+            sprite.spritecollide(hero, monsters, True)
+            sprite.spritecollide(hero, asteroids, True)
+            lifes = lifes - 1
+
+        if lifes == 3:
+            color = (0,255,0)
+        elif lifes == 2:
+            color = (255,255,0)
+        else:
+            color = (255,0,0)
+
+        text = font.render(str(lifes), True, color)
+        window.blit(text, (650, 20))
+
+        if lifes == 0:
+            finish = True  
+
+    else:
+        finish = False
+        score = 0
+        lost = 0
+        lifes = 3
+
+        for b in bullets:
+            b.kill()
+        
+        for m in monsters:
+            m.kill()
+
+        for a in asteroids:
+            a.kill()
+
+        timer.sleep(3)
+
+        for i in range(1,6):
+            monster = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
+            monsters.add(monster)
+        for i in range(1,6):
+            asteroid = Enemy("ufo.png", randint(50,650), 0, 50,50, randint(1,2))
+            asteroids.add(asteroid)
 
     display.update()
     clock.tick(FPS)
